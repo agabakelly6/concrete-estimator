@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concrete Volume & Material Estimator</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Montserrat:wght@400;500;600&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -44,13 +46,22 @@
         }
 
         .header h1 {
-            font-size: 32px;
+            font-size: 42px;
             font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 6px;
+            color: #000000;
+            font-family: 'Playfair Display', Georgia, serif;
+            letter-spacing: 0.3px;
+        }
+
+        .header .developer-credit {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            margin-top: 4px;
+            margin-bottom: 10px;
+            letter-spacing: 0.4px;
         }
 
         .header p {
@@ -424,6 +435,7 @@
         <!-- Header -->
         <div class="header">
             <h1>Concrete Volume & Material Estimator</h1>
+            <p class="developer-credit">developed by Agaba Kelly</p>
             <p>Professional-grade estimation for civil engineering projects</p>
         </div>
 
