@@ -24,7 +24,7 @@
     margin: 0;
     min-height: 100vh;
     font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 220px, var(--bg) 220px);
+    background: #000;
     color: var(--text-dark);
     padding: 0 16px 60px;
   }
@@ -33,6 +33,7 @@
     max-width: 760px;
     margin: 0 auto;
     padding: 36px 4px 24px;
+    background: #000;
     color: #f8fafc;
   }
 
@@ -55,6 +56,14 @@
     font-weight: 600;
   }
 
+  .page-header .developer {
+    margin: 0 0 8px;
+    color: #94a3b8;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
   .page-header p {
     margin: 0;
     color: #94a3b8;
@@ -65,7 +74,7 @@
 
   .card {
     max-width: 760px;
-    margin: -50px auto 0;
+    margin: 20px auto 0;
     background: var(--card-bg);
     border-radius: var(--radius);
     border: 1px solid var(--border);
@@ -308,6 +317,7 @@
 <div class="page-header">
   <span class="tag">Civil Engineering Tool</span>
   <h1>Concrete Volume & Material Estimator</h1>
+  <p class="developer">Developed by AgabaKelly</p>
   <p>Estimate wet/dry concrete volume and the cement, sand, and gravel quantities required for a slab or footing, based on standard nominal mix ratios.</p>
 </div>
 
