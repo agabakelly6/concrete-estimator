@@ -1,465 +1,866 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Concrete Volume & Material Estimator</title>
-<style>
-  :root {
-    --primary: #1d4ed8;
-    --primary-dark: #1e3a8a;
-    --bg: #f1f5f9;
-    --card-bg: #ffffff;
-    --border: #e2e8f0;
-    --text-dark: #0f172a;
-    --text-muted: #64748b;
-    --accent-bg: #eff6ff;
-    --success: #0f766e;
-    --radius: 12px;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concrete Volume & Material Estimator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  * { box-sizing: border-box; }
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary-color: #10b981;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #000;
-    color: var(--text-dark);
-    padding: 0 16px 60px;
-  }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: var(--text-primary);
+            padding: 20px;
+            min-height: 100vh;
+        }
 
-  .page-header {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 36px 4px 24px;
-    background: #000;
-    color: #f8fafc;
-  }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-  .page-header .tag {
-    display: inline-block;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 4px 10px;
-    border-radius: 999px;
-    margin-bottom: 12px;
-    color: #cbd5e1;
-  }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
 
-  .page-header h1 {
-    margin: 0 0 6px;
-    font-size: 26px;
-    font-weight: 600;
-  }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-  .page-header .developer {
-    margin: 0 0 8px;
-    color: #94a3b8;
-    font-size: 13.5px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
 
-  .page-header p {
-    margin: 0;
-    color: #94a3b8;
-    font-size: 14.5px;
-    max-width: 520px;
-    line-height: 1.5;
-  }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
 
-  .card {
-    max-width: 760px;
-    margin: 20px auto 0;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: 0 20px 40px -20px rgba(15, 23, 42, 0.25);
-    padding: 28px;
-  }
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
-  .section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin: 0 0 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+        /* Shape Selector */
+        .shape-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            background: var(--bg-white);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            width: fit-content;
+        }
 
-  .section-title .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--primary);
-    display: inline-block;
-  }
+        .shape-tab {
+            padding: 12px 24px;
+            border: 2px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-  }
+        .shape-tab:hover {
+            color: var(--primary-color);
+        }
 
-  .field label {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
+        .shape-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
 
-  .field .input-wrap {
-    position: relative;
-  }
+        /* Cards */
+        .card {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            transition: box-shadow 0.3s ease;
+        }
 
-  .field input, .field select {
-    width: 100%;
-    padding: 10px 38px 10px 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
-    color: var(--text-dark);
-    background: #fafbfc;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
 
-  .field select { padding: 10px 12px; }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
 
-  .field input:focus, .field select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
-    background: #fff;
-  }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
 
-  .field .unit {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    color: var(--text-muted);
-    pointer-events: none;
-  }
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-  .mix-row {
-    margin-bottom: 24px;
-  }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
 
-  .mix-row .field {
-    max-width: 100%;
-  }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-  .mix-hint {
-    margin-top: 6px;
-    font-size: 12.5px;
-    color: var(--text-muted);
-  }
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
 
-  .calc-btn {
-    width: 100%;
-    padding: 13px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #fff;
-    background: var(--primary);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    letter-spacing: 0.01em;
-  }
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: var(--bg-white);
+            color: var(--text-primary);
+        }
 
-  .calc-btn:hover { background: var(--primary-dark); }
-  .calc-btn:active { transform: scale(0.99); }
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
 
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 28px 0 24px;
-  }
+        input[type="number"]::placeholder {
+            color: var(--text-secondary);
+        }
 
-  .results {
-    display: none;
-  }
+        .input-unit {
+            position: relative;
+        }
 
-  .results.visible { display: block; }
+        .input-unit::after {
+            content: attr(data-unit);
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            pointer-events: none;
+        }
 
-  .volume-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 18px;
-  }
+        .input-unit input {
+            padding-right: 40px;
+        }
 
-  .stat-card {
-    background: var(--accent-bg);
-    border: 1px solid #dbeafe;
-    border-radius: 10px;
-    padding: 14px 16px;
-  }
+        /* Canvas */
+        .canvas-container {
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e8f5 100%);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            margin-bottom: 20px;
+            border: 2px solid var(--border-color);
+        }
 
-  .stat-card .label {
-    font-size: 12px;
-    color: #1e40af;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 6px;
-  }
+        #previewCanvas {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
 
-  .stat-card .value {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-dark);
-  }
+        /* Results Section */
+        .results-section {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+        }
 
-  .stat-card .value span {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-left: 4px;
-  }
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
 
-  .materials-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
-  .materials-table thead {
-    background: #f8fafc;
-  }
+        .result-card {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
 
-  .materials-table th {
-    text-align: left;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--text-muted);
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-  }
+        .result-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
 
-  .materials-table td {
-    padding: 12px 14px;
-    font-size: 14.5px;
-    border-bottom: 1px solid var(--border);
-  }
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
 
-  .materials-table tr:last-child td { border-bottom: none; }
+        .result-unit {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
-  .materials-table .mat-name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-  }
+        /* Cost Breakdown */
+        .cost-breakdown {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border-color);
+        }
 
-  .swatch {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
+        .cost-breakdown-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
 
-  .swatch.cement { background: #64748b; }
-  .swatch.sand { background: #d97706; }
-  .swatch.gravel { background: #475569; }
+        .cost-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
 
-  .materials-table .qty {
-    font-weight: 700;
-    color: var(--text-dark);
-  }
+        .cost-item:last-child {
+            border-bottom: none;
+        }
 
-  .note {
-    margin-top: 18px;
-    font-size: 12.5px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-  }
+        .cost-item-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
 
-  .footer-note {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 12.5px;
-    margin-top: 24px;
-    max-width: 760px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+        .cost-item-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
 
-  @media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .volume-grid { grid-template-columns: 1fr; }
-    .card { padding: 20px; }
-    .page-header h1 { font-size: 22px; }
-  }
-</style>
+        .cost-item.total {
+            padding: 16px 0;
+            background: linear-gradient(135deg, #10b98122 0%, #2563eb22 100%);
+            margin: 16px -16px 0;
+            padding: 16px 16px;
+            border-radius: 8px;
+            border-bottom: none;
+        }
+
+        .cost-item.total .cost-item-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .cost-item.total .cost-item-value {
+            font-size: 22px;
+            color: var(--secondary-color);
+        }
+
+        /* Hidden Class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Material Details Grid */
+        .material-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .material-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .material-card {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .material-card.cement {
+            border-left-color: #f59e0b;
+        }
+
+        .material-card.sand {
+            border-left-color: #f97316;
+        }
+
+        .material-card.gravel {
+            border-left-color: #6366f1;
+        }
+
+        .material-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .material-quantity {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 4px;
+        }
+
+        .material-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .main-grid {
+                gap: 20px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .canvas-container {
+                min-height: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Concrete Volume & Material Estimator</h1>
+            <p>Professional-grade estimation for civil engineering projects</p>
+        </div>
 
-<div class="page-header">
-  <span class="tag">Civil Engineering Tool</span>
-  <h1>Concrete Volume & Material Estimator</h1>
-  <p class="developer">Developed by AgabaKelly</p>
-  <p>Estimate wet/dry concrete volume and the cement, sand, and gravel quantities required for a slab or footing, based on standard nominal mix ratios.</p>
-</div>
+        <!-- Shape Selector -->
+        <div class="shape-selector">
+            <button class="shape-tab active" data-shape="slab">Rectangular Slab</button>
+            <button class="shape-tab" data-shape="column">Circular Column</button>
+        </div>
 
-<div class="card">
+        <!-- Main Grid: Canvas + Inputs -->
+        <div class="main-grid">
+            <!-- Canvas Preview -->
+            <div>
+                <div class="canvas-container">
+                    <canvas id="previewCanvas" width="400" height="400"></canvas>
+                </div>
+            </div>
 
-  <div class="section-title"><span class="dot"></span>Slab dimensions</div>
+            <!-- Input Forms -->
+            <div>
+                <!-- Slab Inputs -->
+                <div class="card" id="slabInputs">
+                    <div class="card-title">Slab Dimensions</div>
+                    <div class="form-group">
+                        <label>Length</label>
+                        <div class="input-unit" data-unit="m">
+                            <input type="number" id="slabLength" placeholder="5.0" value="5" min="0.1" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Width</label>
+                        <div class="input-unit" data-unit="m">
+                            <input type="number" id="slabWidth" placeholder="4.0" value="4" min="0.1" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Thickness</label>
+                        <div class="input-unit" data-unit="m">
+                            <input type="number" id="slabThickness" placeholder="0.15" value="0.15" min="0.05" step="0.01">
+                        </div>
+                    </div>
+                </div>
 
-  <div class="form-grid">
-    <div class="field">
-      <label for="length">Length</label>
-      <div class="input-wrap">
-        <input type="number" id="length" placeholder="5.0" step="0.01" min="0">
-        <span class="unit">m</span>
-      </div>
+                <!-- Column Inputs (Hidden) -->
+                <div class="card hidden" id="columnInputs">
+                    <div class="card-title">Column Dimensions</div>
+                    <div class="form-group">
+                        <label>Diameter</label>
+                        <div class="input-unit" data-unit="m">
+                            <input type="number" id="columnDiameter" placeholder="0.5" value="0.5" min="0.1" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Height / Depth</label>
+                        <div class="input-unit" data-unit="m">
+                            <input type="number" id="columnHeight" placeholder="3.0" value="3" min="0.1" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wastage Factor -->
+                <div class="card">
+                    <div class="card-title">Waste Factor</div>
+                    <div class="form-group">
+                        <label>Wastage Percentage</label>
+                        <div class="input-unit" data-unit="%">
+                            <input type="number" id="wastagePercent" placeholder="5" value="5" min="0" max="100" step="0.5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Pricing -->
+        <div class="card">
+            <div class="card-title">Material Unit Pricing</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Cost per Cement Bag (50kg)</label>
+                    <div class="input-unit" data-unit="UGX">
+                        <input type="number" id="cementPrice" placeholder="28000" value="28000" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cost per m³ of Sand</label>
+                    <div class="input-unit" data-unit="UGX">
+                        <input type="number" id="sandPrice" placeholder="50000" value="50000" min="0" step="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cost per m³ of Gravel</label>
+                    <div class="input-unit" data-unit="UGX">
+                        <input type="number" id="gravelPrice" placeholder="65000" value="65000" min="0" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-section">
+            <div class="card-title">Project Estimation Results</div>
+            
+            <!-- Volume Results -->
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-label">Wet Volume</div>
+                    <div class="result-value" id="wetVolume">0.00</div>
+                    <div class="result-unit">m³</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Dry Volume (×1.54)</div>
+                    <div class="result-value" id="dryVolume">0.00</div>
+                    <div class="result-unit">m³</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Final Required Volume</div>
+                    <div class="result-value" id="finalVolume">0.00</div>
+                    <div class="result-unit">m³ (incl. waste)</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Concrete Grade</div>
+                    <div class="result-value" style="color: #f59e0b; font-size: 20px;">M20</div>
+                    <div class="result-unit">Mix Ratio 1:1.5:3</div>
+                </div>
+            </div>
+
+            <!-- Material Breakdown -->
+            <div class="material-details">
+                <div class="material-card cement">
+                    <div class="material-name">Cement</div>
+                    <div class="material-quantity" id="cementQuantity">0.00</div>
+                    <div class="material-detail">m³ cement</div>
+                    <div class="material-detail" id="cementBags">0 bags (50kg)</div>
+                </div>
+                <div class="material-card sand">
+                    <div class="material-name">Sand</div>
+                    <div class="material-quantity" id="sandQuantity">0.00</div>
+                    <div class="material-detail">m³ sand</div>
+                </div>
+                <div class="material-card gravel">
+                    <div class="material-name">Gravel</div>
+                    <div class="material-quantity" id="gravelQuantity">0.00</div>
+                    <div class="material-detail">m³ gravel</div>
+                </div>
+            </div>
+
+            <!-- Cost Breakdown -->
+            <div class="cost-breakdown">
+                <div class="cost-breakdown-title">Cost Breakdown</div>
+                <div class="cost-item">
+                    <span class="cost-item-label">Cement Cost</span>
+                    <span class="cost-item-value">UGX <span id="cementCost">0.00</span></span>
+                </div>
+                <div class="cost-item">
+                    <span class="cost-item-label">Sand Cost</span>
+                    <span class="cost-item-value">UGX <span id="sandCost">0.00</span></span>
+                </div>
+                <div class="cost-item">
+                    <span class="cost-item-label">Gravel Cost</span>
+                    <span class="cost-item-value">UGX <span id="gravelCost">0.00</span></span>
+                </div>
+                <div class="cost-item total">
+                    <span class="cost-item-label">Total Project Cost</span>
+                    <span class="cost-item-value">UGX <span id="totalCost">0.00</span></span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="field">
-      <label for="width">Width</label>
-      <div class="input-wrap">
-        <input type="number" id="width" placeholder="3.0" step="0.01" min="0">
-        <span class="unit">m</span>
-      </div>
-    </div>
-    <div class="field">
-      <label for="thickness">Thickness</label>
-      <div class="input-wrap">
-        <input type="number" id="thickness" placeholder="0.15" step="0.01" min="0">
-        <span class="unit">m</span>
-      </div>
-    </div>
-  </div>
 
-  <div class="mix-row">
-    <div class="section-title"><span class="dot"></span>Concrete mix ratio</div>
-    <div class="field">
-      <select id="mixRatio">
-        <option value="1,2,4">M15 — Nominal mix (1 : 2 : 4)</option>
-        <option value="1,1.5,3">M20 — Nominal mix (1 : 1.5 : 3)</option>
-        <option value="1,1,2">M25 — Nominal mix (1 : 1 : 2)</option>
-        <option value="1,3,6">M10 — Nominal mix (1 : 3 : 6)</option>
-        <option value="1,4,8">M7.5 — Nominal mix (1 : 4 : 8)</option>
-      </select>
-      <div class="mix-hint">Ratio of Cement : Sand : Aggregate (Gravel) by volume.</div>
-    </div>
-  </div>
+    <script>
+        // Constants
+        const DRY_VOLUME_MULTIPLIER = 1.54;
+        const M20_MIX_RATIO = { cement: 1, sand: 1.5, gravel: 3 };
+        const CEMENT_BAG_VOLUME = 0.035; // m³ per 50kg bag
 
-  <button class="calc-btn" onclick="calculate()">Calculate Materials</button>
+        // State
+        let currentShape = 'slab';
 
-  <div class="divider"></div>
+        // DOM Elements
+        const shapeButtons = document.querySelectorAll('.shape-tab');
+        const slabInputsCard = document.getElementById('slabInputs');
+        const columnInputsCard = document.getElementById('columnInputs');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const ctx = previewCanvas.getContext('2d');
 
-  <div id="results" class="results">
+        // Input elements
+        const slabLengthInput = document.getElementById('slabLength');
+        const slabWidthInput = document.getElementById('slabWidth');
+        const slabThicknessInput = document.getElementById('slabThickness');
+        const columnDiameterInput = document.getElementById('columnDiameter');
+        const columnHeightInput = document.getElementById('columnHeight');
+        const wastageInput = document.getElementById('wastagePercent');
+        const cementPriceInput = document.getElementById('cementPrice');
+        const sandPriceInput = document.getElementById('sandPrice');
+        const gravelPriceInput = document.getElementById('gravelPrice');
 
-    <div class="section-title"><span class="dot"></span>Volume summary</div>
-    <div class="volume-grid">
-      <div class="stat-card">
-        <div class="label">Wet volume</div>
-        <div class="value" id="wetVolume">0.00<span>m³</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Dry volume (×1.54)</div>
-        <div class="value" id="dryVolume">0.00<span>m³</span></div>
-      </div>
-    </div>
+        // Result elements
+        const wetVolumeEl = document.getElementById('wetVolume');
+        const dryVolumeEl = document.getElementById('dryVolume');
+        const finalVolumeEl = document.getElementById('finalVolume');
+        const cementQuantityEl = document.getElementById('cementQuantity');
+        const sandQuantityEl = document.getElementById('sandQuantity');
+        const gravelQuantityEl = document.getElementById('gravelQuantity');
+        const cementBagsEl = document.getElementById('cementBags');
+        const cementCostEl = document.getElementById('cementCost');
+        const sandCostEl = document.getElementById('sandCost');
+        const gravelCostEl = document.getElementById('gravelCost');
+        const totalCostEl = document.getElementById('totalCost');
 
-    <div class="section-title"><span class="dot"></span>Material requirement</div>
-    <table class="materials-table">
-      <thead>
-        <tr>
-          <th>Material</th>
-          <th>Ratio part</th>
-          <th>Quantity</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="mat-name"><span class="swatch cement"></span>Cement</td>
-          <td id="cementRatio">1</td>
-          <td class="qty" id="cementBags">0 bags</td>
-        </tr>
-        <tr>
-          <td class="mat-name"><span class="swatch sand"></span>Sand</td>
-          <td id="sandRatio">2</td>
-          <td class="qty" id="sandVolume">0.00 m³</td>
-        </tr>
-        <tr>
-          <td class="mat-name"><span class="swatch gravel"></span>Gravel / Aggregate</td>
-          <td id="gravelRatio">4</td>
-          <td class="qty" id="gravelVolume">0.00 m³</td>
-        </tr>
-      </tbody>
-    </table>
+        // Event Listeners - Shape Selector
+        shapeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                shapeButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentShape = e.target.dataset.shape;
+                
+                if (currentShape === 'slab') {
+                    slabInputsCard.classList.remove('hidden');
+                    columnInputsCard.classList.add('hidden');
+                } else {
+                    slabInputsCard.classList.add('hidden');
+                    columnInputsCard.classList.remove('hidden');
+                }
+                
+                updateAll();
+            });
+        });
 
-    <div class="note">
-      Calculation basis: cement density of 1440 kg/m³ and a 50 kg bag size. Dry volume accounts for shrinkage/voids using the standard 1.54 multiplier. Figures are estimates for preliminary planning — always confirm with project specifications and a qualified engineer before procurement.
-    </div>
+        // Event Listeners - All Inputs
+        const allInputs = [
+            slabLengthInput, slabWidthInput, slabThicknessInput,
+            columnDiameterInput, columnHeightInput,
+            wastageInput, cementPriceInput, sandPriceInput, gravelPriceInput
+        ];
 
-  </div>
+        allInputs.forEach(input => {
+            input.addEventListener('input', updateAll);
+        });
 
-</div>
+        // Calculations
+        function calculateWetVolume() {
+            if (currentShape === 'slab') {
+                const length = parseFloat(slabLengthInput.value) || 0;
+                const width = parseFloat(slabWidthInput.value) || 0;
+                const thickness = parseFloat(slabThicknessInput.value) || 0;
+                return length * width * thickness;
+            } else {
+                const diameter = parseFloat(columnDiameterInput.value) || 0;
+                const height = parseFloat(columnHeightInput.value) || 0;
+                const radius = diameter / 2;
+                return Math.PI * radius * radius * height;
+            }
+        }
 
-<div class="footer-note">Built as a portfolio tool — Concrete Volume & Material Estimator v1.0</div>
+        function calculateMaterials() {
+            const wetVolume = calculateWetVolume();
+            const dryVolume = wetVolume * DRY_VOLUME_MULTIPLIER;
+            const wastagePercent = parseFloat(wastageInput.value) || 0;
+            const finalVolume = dryVolume * (1 + wastagePercent / 100);
 
-<script>
-function calculate() {
-  const length = parseFloat(document.getElementById('length').value);
-  const width = parseFloat(document.getElementById('width').value);
-  const thickness = parseFloat(document.getElementById('thickness').value);
+            const totalParts = M20_MIX_RATIO.cement + M20_MIX_RATIO.sand + M20_MIX_RATIO.gravel;
+            
+            const cement = (M20_MIX_RATIO.cement / totalParts) * finalVolume;
+            const sand = (M20_MIX_RATIO.sand / totalParts) * finalVolume;
+            const gravel = (M20_MIX_RATIO.gravel / totalParts) * finalVolume;
 
-  if (isNaN(length) || isNaN(width) || isNaN(thickness) || length <= 0 || width <= 0 || thickness <= 0) {
-    alert('Please enter valid positive values for Length, Width, and Thickness.');
-    return;
-  }
+            return {
+                wetVolume,
+                dryVolume,
+                finalVolume,
+                cement,
+                sand,
+                gravel
+            };
+        }
 
-  const mixValue = document.getElementById('mixRatio').value;
-  const [cementPart, sandPart, gravelPart] = mixValue.split(',').map(Number);
-  const totalParts = cementPart + sandPart + gravelPart;
+        function calculateCosts(materials) {
+            const cementPrice = parseFloat(cementPriceInput.value) || 0;
+            const sandPrice = parseFloat(sandPriceInput.value) || 0;
+            const gravelPrice = parseFloat(gravelPriceInput.value) || 0;
 
-  const wetVolume = length * width * thickness;
-  const dryVolume = wetVolume * 1.54;
+            const cementBags = materials.cement / CEMENT_BAG_VOLUME;
+            const cementCost = cementBags * cementPrice;
+            const sandCost = materials.sand * sandPrice;
+            const gravelCost = materials.gravel * gravelPrice;
+            const totalCost = cementCost + sandCost + gravelCost;
 
-  const cementVolume = (cementPart / totalParts) * dryVolume;
-  const sandVolume = (sandPart / totalParts) * dryVolume;
-  const gravelVolume = (gravelPart / totalParts) * dryVolume;
+            return {
+                cementBags,
+                cementCost,
+                sandCost,
+                gravelCost,
+                totalCost
+            };
+        }
 
-  const cementDensity = 1440; // kg/m3
-  const bagSize = 50; // kg
-  const cementWeight = cementVolume * cementDensity;
-  const cementBags = cementWeight / bagSize;
+        function updateResults() {
+            const materials = calculateMaterials();
+            const costs = calculateCosts(materials);
 
-  document.getElementById('wetVolume').innerHTML = wetVolume.toFixed(3) + '<span>m³</span>';
-  document.getElementById('dryVolume').innerHTML = dryVolume.toFixed(3) + '<span>m³</span>';
+            // Update volume displays
+            wetVolumeEl.textContent = materials.wetVolume.toFixed(3);
+            dryVolumeEl.textContent = materials.dryVolume.toFixed(3);
+            finalVolumeEl.textContent = materials.finalVolume.toFixed(3);
 
-  document.getElementById('cementRatio').textContent = cementPart;
-  document.getElementById('sandRatio').textContent = sandPart;
-  document.getElementById('gravelRatio').textContent = gravelPart;
+            // Update material displays
+            cementQuantityEl.textContent = materials.cement.toFixed(3);
+            sandQuantityEl.textContent = materials.sand.toFixed(3);
+            gravelQuantityEl.textContent = materials.gravel.toFixed(3);
+            cementBagsEl.textContent = `${Math.ceil(costs.cementBags)} bags (50kg)`;
 
-  document.getElementById('cementBags').textContent = Math.ceil(cementBags) + ' bags (' + cementWeight.toFixed(1) + ' kg)';
-  document.getElementById('sandVolume').textContent = sandVolume.toFixed(3) + ' m³';
-  document.getElementById('gravelVolume').textContent = gravelVolume.toFixed(3) + ' m³';
+            // Update cost displays
+            cementCostEl.textContent = costs.cementCost.toFixed(2);
+            sandCostEl.textContent = costs.sandCost.toFixed(2);
+            gravelCostEl.textContent = costs.gravelCost.toFixed(2);
+            totalCostEl.textContent = costs.totalCost.toFixed(2);
+        }
 
-  document.getElementById('results').classList.add('visible');
-}
-</script>
+        function drawCanvas() {
+            // Clear canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
 
+            // Get current dimensions
+            let canvasWidth, canvasHeight, shapeData;
+
+            if (currentShape === 'slab') {
+                const length = parseFloat(slabLengthInput.value) || 1;
+                const width = parseFloat(slabWidthInput.value) || 1;
+                const thickness = parseFloat(slabThicknessInput.value) || 0.1;
+
+                canvasWidth = previewCanvas.width;
+                canvasHeight = previewCanvas.height;
+                
+                // Calculate scaling
+                const padding = 40;
+                const availWidth = canvasWidth - (2 * padding);
+                const availHeight = canvasHeight - (2 * padding);
+                
+                const scaleX = availWidth / length;
+                const scaleY = availHeight / width;
+                const scale = Math.min(scaleX, scaleY);
+
+                const drawWidth = length * scale;
+                const drawHeight = width * scale;
+                const startX = (canvasWidth - drawWidth) / 2;
+                const startY = (canvasHeight - drawHeight) / 2;
+
+                // Draw slab with 3D effect
+                const shadow = 4;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(startX + shadow, startY + shadow, drawWidth, drawHeight);
+
+                ctx.fillStyle = '#3b82f6';
+                ctx.fillRect(startX, startY, drawWidth, drawHeight);
+                ctx.strokeStyle = '#1e40af';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(startX, startY, drawWidth, drawHeight);
+
+                // Draw thickness indicator
+                if (thickness > 0.05) {
+                    ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+                    ctx.fillRect(startX + 2, startY + drawHeight - 8, drawWidth - 4, 6);
+                }
+
+                // Draw dimensions
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 12px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${length.toFixed(2)}m × ${width.toFixed(2)}m × ${thickness.toFixed(2)}m`, 
+                            canvasWidth / 2, startY - 15);
+
+            } else {
+                // Circular Column
+                const diameter = parseFloat(columnDiameterInput.value) || 0.5;
+                const height = parseFloat(columnHeightInput.value) || 1;
+                const radius = diameter / 2;
+
+                canvasWidth = previewCanvas.width;
+                canvasHeight = previewCanvas.height;
+
+                const padding = 40;
+                const availWidth = canvasWidth - (2 * padding);
+                const availHeight = canvasHeight - (2 * padding);
+
+                const scaleX = availWidth / diameter;
+                const scaleY = availHeight / height;
+                const scale = Math.min(scaleX, scaleY);
+
+                const drawRadius = radius * scale;
+                const drawHeight = height * scale;
+                const centerX = canvasWidth / 2;
+                const startY = (canvasHeight - drawHeight) / 2;
+
+                // Draw column shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(centerX - drawRadius + 4, startY + 4, drawRadius * 2, drawHeight);
+
+                // Draw column body
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(centerX - drawRadius, startY, drawRadius * 2, drawHeight);
+                ctx.strokeStyle = '#059669';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(centerX - drawRadius, startY, drawRadius * 2, drawHeight);
+
+                // Draw circular cross-section at top
+                ctx.beginPath();
+                ctx.arc(centerX, startY, drawRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#34d399';
+                ctx.fill();
+                ctx.strokeStyle = '#059669';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw dimensions
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 12px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Ø ${diameter.toFixed(2)}m × H ${height.toFixed(2)}m`, 
+                            canvasWidth / 2, startY - 15);
+            }
+
+            // Draw title
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentShape === 'slab' ? 'Rectangular Slab' : 'Circular Column', 
+                        canvasWidth / 2, canvasHeight - 15);
+        }
+
+        function updateAll() {
+            updateResults();
+            drawCanvas();
+        }
+
+        // Initial draw
+        updateAll();
+    </script>
 </body>
 </html>
